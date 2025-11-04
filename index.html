@@ -1,10 +1,100 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="UTF-8" />
+<head>
+    <meta charset="UTF-8">
     <title>VLESS Subscription</title>
-  </head>
-  <body>
-    <script src="index.js"></script>
-  </body>
+</head>
+<body>
+    <script>
+        // 原始VLESS源地址（与之前一致）
+        const VLESS_SOURCES = [
+            "https://sub.cmliussss.net/sub?uuid=f934df12-b33a-43cc-9382-9444e80d3124&path=%2Fip%3Dproxyip.fxxk.dedyn.io&security=tls&encryption=none&host=dl.ouuuo.ggff.net&type=ws&sni=dl.ouuuo.ggff.net",
+            "https://zrf.zrf.me/sub?uuid=f934df12-b33a-43cc-9382-9444e80d3124&path=%2Fip%3Dproxyip.fxxk.dedyn.io&security=tls&encryption=none&host=dl.ouuuo.ggff.net&type=ws&sni=dl.ouuuo.ggff.net",
+            "https://owo.o00o.ooo/sub?uuid=f934df12-b33a-43cc-9382-9444e80d3124&encryption=none&security=tls&sni=dl.ouuuo.ggff.net&alpn=&fp=random&type=ws&host=dl.ouuuo.ggff.net&path=%2Fip%3Dproxyip.fxxk.dedyn.io&fragment=1%2C40-60%2C30-50%2Ctlshello",
+            "https://cfsub.cfcdn.xx.kg/sub?uuid=f934df12-b33a-43cc-9382-9444e80d3124&encryption=none&security=tls&sni=dl.ouuuo.ggff.net&alpn=&fp=random&type=ws&host=dl.ouuuo.ggff.net&path=%2Fip%3Dproxyip.fxxk.dedyn.io&fragment=1%2C40-60%2C30-50%2Ctlshello",
+            "https://sub.lzjbaby.com/sub?uuid=f934df12-b33a-43cc-9382-9444e80d3124&encryption=none&security=tls&sni=dl.ouuuo.ggff.net&alpn=&fp=random&type=ws&host=dl.ouuuo.ggff.net&path=%2Fip%3Dproxyip.fxxk.dedyn.io&fragment=1%2C40-60%2C30-50%2Ctlshello"
+        ];
+
+        // 替换配置（与之前一致）
+        const REPLACE_CONFIG = {
+            "【TG:@LSMOO】": "·TG@pikpak18x",
+            "TG@LSMOO": "·TG@pikpak18x·",
+            "秋名山优选": "18x优选",
+            "CF182682": "18x优选",
+            "青云志优选": "18x优选",
+            "CM优选": "18x优选",
+            "t.me/CMLiussss": "t.me/pikpak18x",
+            "Tg里的欢乐时光": "PIKPAK🔞资源社",
+            "群组@mianfeicf": "TG频道@pikpak18x",
+            "blog.notett.com": "TG@pikpak18x"
+        };
+
+        // 验证Vless格式（与之前一致）
+        function isVlessValid(vlessUrl) {
+            const vlessRegex = /^vless:\/\/[0-9a-fA-F-]{36}@[\d\.a-zA-Z]+:\d+\?.*$/;
+            return vlessRegex.test(vlessUrl.trim());
+        }
+
+        // UTF-8转Base64（与之前一致）
+        function utf8ToBase64(str) {
+            const encoder = new TextEncoder();
+            const uint8Array = encoder.encode(str);
+            return btoa(String.fromCharCode(...uint8Array));
+        }
+
+        // 核心逻辑：获取、解码、去重、替换、编码
+        async function generateSubscription() {
+            try {
+                let allVlessNodes = [];
+                for (const sourceUrl of VLESS_SOURCES) {
+                    try {
+                        const response = await fetch(sourceUrl, {
+                            headers: { "User-Agent": "VLESS-Subscription/GitHub-Pages" },
+                            timeout: 12000
+                        });
+                        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                        
+                        let encodedContent = await response.text();
+                        const cleanB64 = encodedContent.replace(/\s+/g, '');
+                        let decodedContent = atob(cleanB64);
+                        decodedContent = decodeURIComponent(decodedContent);
+                        
+                        const lines = decodedContent.split(/[\n\r]+/);
+                        const validVless = lines
+                            .map(line => line.trim())
+                            .filter(line => line.startsWith("vless://") && isVlessValid(line));
+                        allVlessNodes.push(...validVless);
+                    } catch (err) {
+                        console.warn(`[${sourceUrl}] 处理失败: ${err.message}`);
+                        continue;
+                    }
+                }
+
+                // 去重
+                const uniqueVlessNodes = [...new Set(allVlessNodes)];
+
+                // 内容替换
+                const finalNodes = uniqueVlessNodes.map(node => {
+                    let modifiedNode = node;
+                    Object.entries(REPLACE_CONFIG).forEach(([oldStr, newStr]) => {
+                        modifiedNode = modifiedNode.replace(oldStr, newStr);
+                    });
+                    return modifiedNode;
+                });
+
+                // 转为Base64并输出
+                const nodeText = finalNodes.join('\n');
+                const b64Result = utf8ToBase64(nodeText);
+                
+                // 替换页面内容为Base64订阅
+                document.body.innerHTML = `<pre>${b64Result}</pre>`;
+            } catch (err) {
+                document.body.innerHTML = `<pre>订阅生成失败: ${err.message}</pre>`;
+            }
+        }
+
+        // 页面加载完成后执行
+        window.onload = generateSubscription;
+    </script>
+</body>
 </html>
